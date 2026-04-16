@@ -71,6 +71,8 @@ console.log(order.id, 'remaining:', rateLimit.remaining);
 
 ## Sandbox vs production
 
-Sandbox is the default base URL. Flip to production by passing an explicit
-`baseUrl`. The simulator at [v2cs.armadadelivery.com](https://v2cs.armadadelivery.com)
-is a good place to experiment before going live.
+Sandbox is the default base URL — `https://sandbox.api.armadadelivery.com`.
+Flip to production by passing an explicit `baseUrl:
+'https://api.armadadelivery.com'`. Enable **Test mode** on a sandbox
+key in the business-app to exercise the full delivery lifecycle
+without dispatching a real driver.
