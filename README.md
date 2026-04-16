@@ -2,9 +2,29 @@
 
 Official Node / TypeScript SDK for the Armada Automated Ordering API v2.
 
+## Install
+
+From npm (once published):
+
 ```bash
 npm i @armada/sdk
 ```
+
+Directly from the GitHub repo — no registry needed, works today:
+
+```bash
+# latest main
+npm i github:armadadelivery/armada-node
+
+# pinned to a release tag
+npm i github:armadadelivery/armada-node#v0.1.0-beta.0
+
+# pinned to a specific commit
+npm i github:armadadelivery/armada-node#7e1a4f09
+```
+
+The SDK has a `prepare` script, so npm automatically runs `tsc` on install
+when fetched from git. You end up with a compiled `dist/` ready to import.
 
 ## Quick start
 
