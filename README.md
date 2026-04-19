@@ -34,7 +34,7 @@ import { ArmadaClient } from '@armada/sdk';
 const armada = new ArmadaClient({
   apiKey: process.env.ARMADA_API_KEY!,
   apiSecret: process.env.ARMADA_API_SECRET!,
-  // defaults to https://sandbox.api.armadadelivery.com — set baseUrl to production explicitly.
+  // defaults to https://api.armadadelivery.com — use a Test-mode API key to simulate deliveries.
 });
 
 const { data: order, rateLimit } = await armada.deliveries.create({
@@ -69,10 +69,19 @@ console.log(order.id, 'remaining:', rateLimit.remaining);
 - `client.wallet.get`
 - `client.invoices.list / get`
 
-## Sandbox vs production
+## Production, Test mode, and the optional sandbox env
 
-Sandbox is the default base URL — `https://sandbox.api.armadadelivery.com`.
-Flip to production by passing an explicit `baseUrl:
-'https://api.armadadelivery.com'`. Enable **Test mode** on a sandbox
-key in the business-app to exercise the full delivery lifecycle
-without dispatching a real driver.
+The default base URL is **production** (`https://api.armadadelivery.com`).
+The recommended integration path is:
+
+1. Create a key in the business app at
+   [business.armadadelivery.com](https://business.armadadelivery.com) with
+   **Test mode ON**.
+2. Every order that key creates is simulated end-to-end — bot driver, ~30 s
+   lifecycle, no real driver, no wallet charge.
+3. Toggle Test mode off on the same key when you're ready to go live.
+
+A fully-isolated sandbox deployment exists at
+`https://sandbox.api.armadadelivery.com` — pass it as `baseUrl` explicitly
+if you want zero overlap with your production account. For most integrations
+you do not need this.

@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 export interface ArmadaClientOptions {
   apiKey: string;
   apiSecret: string;
-  /** Defaults to sandbox. Pass the production URL explicitly. */
+  /** Defaults to production (https://api.armadadelivery.com). Use a Test-mode API key to simulate deliveries. Pass `https://sandbox.api.armadadelivery.com` explicitly if you want the fully-isolated sandbox env. */
   baseUrl?: string;
   /** Axios request timeout in ms. Defaults to 30000. */
   timeoutMs?: number;
@@ -40,7 +40,7 @@ export interface ArmadaError extends Error {
   response?: unknown;
 }
 
-const DEFAULT_BASE = 'https://sandbox.api.armadadelivery.com';
+const DEFAULT_BASE = 'https://api.armadadelivery.com';
 
 function parseRateLimit(headers: Record<string, unknown>): RateLimit {
   const get = (k: string) => {
