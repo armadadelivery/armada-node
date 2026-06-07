@@ -1,0 +1,80 @@
+name: Regenerate from OpenAPI
+
+on:
+  repository_dispatch:
+    types: [openapi-updated]
+  workflow_dispatch:
+    inputs:
+      spec_url:
+        description: OpenAPI spec URL
+        required: false
+        default: https://raw.githubusercontent.com/armadadelivery/armada-sdks/main/spec/v2.yaml
+      spec_sha:
+        description: Source spec SHA
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Resolve payload
+        id: payload
+        run: |
+          spec_url="${{ github.event.client_payload.spec_url || inputs.spec_url || 'https://raw.githubusercontent.com/armadadelivery/armada-sdks/main/spec/v2.yaml' }}"
+          spec_sha="${{ github.event.client_payload.spec_sha || inputs.spec_sha || github.sha }}"
+          echo "spec_url=$spec_url" >> "$GITHUB_OUTPUT"
+          echo "spec_sha=$spec_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Download spec
+        run: curl -fsSL "${{ steps.payload.outputs.spec_url }}" -o /tmp/armada-openapi-v2.yaml
+
+      - name: Generate Node SDK
+        run: |
+          cat > /tmp/armada-openapi-generator.yaml <<'YAML'
+          generatorName: typescript-axios
+          outputDir: .regen/node
+          inputSpec: /tmp/armada-openapi-v2.yaml
+          additionalProperties:
+            npmName: '@armada/sdk-generated'
+            npmVersion: 0.1.0
+            supportsES6: true
+            withSeparateModelsAndApi: true
+            apiPackage: api
+            modelPackage: model
+            useSingleRequestParameter: true
+          YAML
+          npx --yes @openapitools/openapi-generator-cli@2.13.4 generate --config /tmp/armada-openapi-generator.yaml
+
+      - name: Copy generated output
+        run: |
+          rm -rf generated
+          mkdir -p generated
+          cp -a .regen/node/. generated/
+
+      - name: Open regeneration PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(openapi): regenerate Node SDK from ${{ steps.payload.outputs.spec_sha }}"
+          title: "chore(openapi): regenerate Node SDK"
+          body: |
+            Regenerated Node SDK output from Armada OpenAPI spec.
+
+            Spec SHA: `${{ steps.payload.outputs.spec_sha }}`
+            Spec URL: `${{ steps.payload.outputs.spec_url }}`
+          branch: chore/openapi-regen-${{ steps.payload.outputs.spec_sha }}
+          delete-branch: true
