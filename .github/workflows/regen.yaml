@@ -12,6 +12,9 @@ on:
       spec_sha:
         description: Source spec SHA
         required: false
+      spec_base64:
+        description: Base64-encoded OpenAPI spec
+        required: false
 
 permissions:
   contents: write
@@ -41,7 +44,14 @@ jobs:
           echo "spec_sha=$spec_sha" >> "$GITHUB_OUTPUT"
 
       - name: Download spec
-        run: curl -fsSL "${{ steps.payload.outputs.spec_url }}" -o /tmp/armada-openapi-v2.yaml
+        env:
+          SPEC_BASE64: ${{ github.event.client_payload.spec_base64 || inputs.spec_base64 || '' }}
+        run: |
+          if [ -n "$SPEC_BASE64" ]; then
+            printf '%s' "$SPEC_BASE64" | base64 -d > /tmp/armada-openapi-v2.yaml
+          else
+            curl -fsSL "${{ steps.payload.outputs.spec_url }}" -o /tmp/armada-openapi-v2.yaml
+          fi
 
       - name: Generate Node SDK
         run: |
